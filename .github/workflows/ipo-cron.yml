@@ -1,28 +1,56 @@
 name: IPO Notifier Cron
 
+# =========================================================
+# TRIGGERS
+# =========================================================
+
 on:
+  # Daily scheduled run
   schedule:
-    - cron: "30 13 * * *"   # 7:00 PM IST
-  workflow_dispatch:        # Manual trigger
+    - cron: "45 20 * * *"   # 12:30 PM IST (07:00 UTC)
+
+  # Manual trigger option
+  workflow_dispatch:
+
+# =========================================================
+# JOB DEFINITION
+# =========================================================
 
 jobs:
-  run-script:
+  run-ipo-notifier:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repo
+
+      # -----------------------------------
+      # Step 1 — Checkout Repo
+      # -----------------------------------
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
+      # -----------------------------------
+      # Step 2 — Setup Python
+      # -----------------------------------
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: Install Dependencies
+      # -----------------------------------
+      # Step 3 — Install Dependencies
+      # -----------------------------------
+      - name: Install Requirements
         run: |
+          pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run IPO Script
+      # -----------------------------------
+      # Step 4 — Run IPO Script
+      # -----------------------------------
+      - name: Execute IPO Notifier
         run: |
           python ipo_script.py
-
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}

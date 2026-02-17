@@ -3,26 +3,44 @@ import pandas as pd
 from datetime import datetime
 import re
 from html import unescape
+import os
+import smtplib
+from email.mime.text import MIMEText
 
 # =========================================================
-# CONFIG SECTION (CHANGE ONLY HERE)
+# CONFIG SECTION
+# Change values here only
 # =========================================================
 
-TAB = "open"
-# Options:
+# TAB OPTIONS (InvestorGain API Tabs)
+# -----------------------------------
 # "open"            → All active IPOs
 # "closing-today"   → IPOs closing today
 # "current"         → Upcoming IPOs
-# "ipo"             → Mainboard IPOs
+# "ipo"             → Mainboard IPOs only
 # "close"           → Closed IPOs
 
-GMP_FILTER = 10
-# Use:
-# -1 → Test mode (include ₹0)
+TAB = "open"   # Change to "closing-today" in production later
+
+
+# GMP FILTER
+# -----------------------------------
+# -1 → Test mode (includes ₹0 GMP)
 #  0 → Production mode (only positive GMP)
 
+GMP_FILTER = 0
+
+
 # =========================================================
-# BUILD DYNAMIC URL
+# EMAIL CONFIG (Loaded from GitHub Secrets)
+# =========================================================
+
+EMAIL_USER = os.getenv("EMAIL_USER")
+EMAIL_PASS = os.getenv("EMAIL_PASS")
+EMAIL_TO = os.getenv("EMAIL_TO")
+
+# =========================================================
+# BUILD DYNAMIC API URL
 # =========================================================
 
 today = datetime.now()
@@ -44,7 +62,7 @@ URL = (
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 print("\n====================================")
-print("📡 IPO DATA FETCHER")
+print("📡 IPO Notifier Agent Running")
 print("====================================\n")
 
 print(f"TAB MODE: {TAB}")
@@ -83,10 +101,7 @@ for ipo in ipo_rows:
     # Extract numeric GMP
     gmp_match = re.search(r'(-?\d+)', gmp_text)
 
-    if gmp_match:
-        gmp_value = int(gmp_match.group(1))
-    else:
-        gmp_value = 0
+    gmp_value = int(gmp_match.group(1)) if gmp_match else 0
 
     subscription = ipo.get("Sub", "N/A")
     close_date = ipo.get("~Srt_Close", "N/A")
@@ -113,13 +128,11 @@ df = pd.DataFrame(
 )
 
 print("====================================")
-print("📊 RAW DATA")
+print("📊 RAW IPO DATA")
 print("====================================\n")
 
 if df.empty:
     print("No IPOs found.\n")
-else:
-    print(df.to_string(index=False))
 
 # =========================================================
 # FILTER LOGIC
@@ -127,14 +140,40 @@ else:
 
 filtered_df = df[df["GMP"] > GMP_FILTER]
 
-print("\n====================================")
-print("🧪 FILTERED DATA")
+print("====================================")
+print("🧪 FILTERED IPO DATA")
 print("====================================\n")
 
 if filtered_df.empty:
-    print("No IPOs match GMP filter.\n")
-else:
-    print(filtered_df.to_string(index=False))
-    print("\nTotal Matching IPOs:", len(filtered_df))
+    print("No IPO matches GMP filter. No email sent.\n")
+    exit()
 
-print("\n====================================\n")
+print(filtered_df.to_string(index=False))
+
+# =========================================================
+# EMAIL BODY
+# =========================================================
+
+body = "📊 IPO Alert — GMP > 0\n\n"
+body += filtered_df.to_string(index=False)
+
+msg = MIMEText(body)
+msg["Subject"] = "IPO Alert — GMP > 0"
+msg["From"] = EMAIL_USER
+msg["To"] = EMAIL_TO
+
+# =========================================================
+# SEND EMAIL
+# =========================================================
+
+print("\nSending email alert...\n")
+
+server = smtplib.SMTP("smtp.gmail.com", 587)
+server.starttls()
+server.login(EMAIL_USER, EMAIL_PASS)
+server.send_message(msg)
+server.quit()
+
+print("Email sent successfully ✅\n")
+
+print("====================================\n")
