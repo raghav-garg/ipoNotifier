@@ -7,7 +7,7 @@ name: IPO Notifier Cron
 on:
   # Daily scheduled run
   schedule:
-    - cron: "45 20 * * *"   # 12:30 PM IST (07:00 UTC)
+    - cron: "45 6 * * *"   # 12:15 PM IST (07:00 UTC)
 
   # Manual trigger option
   workflow_dispatch:
