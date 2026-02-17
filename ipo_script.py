@@ -28,7 +28,7 @@ TAB = "open"   # Change to "closing-today" in production later
 # -1 → Test mode (includes ₹0 GMP)
 #  0 → Production mode (only positive GMP)
 
-GMP_FILTER = 0
+GMP_FILTER = -1
 
 
 # =========================================================
