@@ -20,7 +20,7 @@ from email.mime.text import MIMEText
 # "ipo"             → Mainboard IPOs only
 # "close"           → Closed IPOs
 
-TAB = "open"   # Change to "closing-today" later
+TAB = "closing-today"   # Change to "closing-today" later
 
 
 # GMP FILTER
@@ -229,7 +229,7 @@ html_body = build_html_table(
 )
 
 msg = MIMEText(html_body, "html")
-msg["Subject"] = "IPO Alert — GMP > 0"
+msg["Subject"] = "IPO Alert — Daily Digest"
 msg["From"] = EMAIL_USER
 msg["To"] = EMAIL_TO
 
