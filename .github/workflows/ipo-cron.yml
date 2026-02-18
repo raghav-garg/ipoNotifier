@@ -1,32 +1,42 @@
-name: IPO Notifier Cron
+name: Daily Digest Cron
 
 # =========================================================
 # TRIGGERS
 # =========================================================
 
 on:
-  # Daily scheduled run
-  schedule:
-    - cron: "45 6 * * *"   # 12:15 PM IST (07:00 UTC)
 
-  # Manual trigger option
+  # -----------------------------------
+  # Daily Scheduled Run
+  # 12:15 PM IST = 06:45 UTC
+  # -----------------------------------
+  schedule:
+    - cron: "45 6 * * *"
+
+  # -----------------------------------
+  # Manual Run Button
+  # -----------------------------------
   workflow_dispatch:
 
+
 # =========================================================
-# JOB DEFINITION
+# JOBS
 # =========================================================
 
 jobs:
-  run-ipo-notifier:
+
+  run-daily-digest:
+
     runs-on: ubuntu-latest
 
     steps:
 
       # -----------------------------------
-      # Step 1 — Checkout Repo
+      # Step 1 — Checkout Repository
       # -----------------------------------
       - name: Checkout Repository
         uses: actions/checkout@v3
+
 
       # -----------------------------------
       # Step 2 — Setup Python
@@ -36,6 +46,7 @@ jobs:
         with:
           python-version: "3.10"
 
+
       # -----------------------------------
       # Step 3 — Install Dependencies
       # -----------------------------------
@@ -44,12 +55,13 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
+
       # -----------------------------------
-      # Step 4 — Run IPO Script
+      # Step 4 — Run Digest Script
       # -----------------------------------
-      - name: Execute IPO Notifier
+      - name: Execute Daily Digest
         run: |
-          python ipo_script.py
+          python main_digest.py
         env:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
